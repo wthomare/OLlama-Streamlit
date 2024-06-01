@@ -57,7 +57,6 @@ def get_response(model, user_input, max_tokens, top_p, temperature):
         return None, str(e)
 
 
-
 # Adjust the title based on the selected model
 st.header(f"`{model_display_name}` Model")
 
@@ -66,13 +65,15 @@ with st.expander("About this app"):
     This Chatbot app allows users to interact with various models including the new LLM models availabme on OLlama.
     For more info, you can refer to [OLlama's documentation](https://github.com/ollama/ollama).
 
-    💡 For decent answers, you'd want to increase the `Max Tokens` value from `100` to `500`. 
+    💡 For decent answers, you'd want to increase the `Max Tokens` value from `100` to `500`.
+
+    💡 For more or less creative answer, you'd want to change the `temperatire` value from `-1` to `1`. 
     """)
 
 with st.sidebar:
     max_tokens = st.slider('Max Tokens', 10, 500, 100)
     top_p = st.slider('Top P', 0.0, 1.0, 0.5, 0.05)
-    temperature = st.slider("Temperature", -1.0, 1.0, 0.1)
+    temperature = st.slider("Temperature", -1.0, 1.0, 0.8, 0.1)
 
 
     if "messages" not in st.session_state:
