@@ -16,7 +16,6 @@ MODEL_IMAGES = {
 }
 
 
-
 # Debug to ensure names are formatted correctly
 #st.write("Formatted Model Names to Identifiers:", formatted_names_to_identifiers)
 
@@ -37,23 +36,21 @@ model_display_name = selected_formatted_name  # Already formatted
 # st.write(f"Model being used: `{model_display_name}`")
 
 st.sidebar.markdown('---')
+
+
+# parameters and options : https://github.com/ollama/ollama/blob/main/docs/modelfile.md
 client = Client(host=f"{parameters['ollama']['url']}:{parameters['ollama']['port']}")
 
-def get_response(model, user_input, max_tokens, top_p):
+def get_response(model, user_input, max_tokens, top_p, temperature):
     try:
-        # Existing setup for other models
-        """
-        chat_completion = openai.ChatCompletion.create(
-            model=model,
-            messages=[{"role": "user", "content": user_input}],
-            max_tokens=max_tokens,
-            top_p=top_p
-        )
-        """
-        
+        # Existing setup for other models       
         chat_completion = client.chat(model = model,
                                       messages = [{"role": "user",
-                                                   "content": user_input}])
+                                                   "content": user_input}],
+                                      options={"temperature":temperature,
+                                               "top_p": top_p,
+                                               "num_predict":max_tokens}
+                                      )
         
         return chat_completion['message']['content'], None
     except Exception as e:
@@ -75,15 +72,9 @@ with st.expander("About this app"):
 with st.sidebar:
     max_tokens = st.slider('Max Tokens', 10, 500, 100)
     top_p = st.slider('Top P', 0.0, 1.0, 0.5, 0.05)
+    temperature = st.slider("Temperature", -1.0, 1.0, 0.1)
 
-if max_tokens > 100:
-    user_provided_api_key = st.text_input("👇 Your DeepInfra API Key", value=st.session_state.api_key, type='password')
-    if user_provided_api_key:
-        st.session_state.api_key = user_provided_api_key
-    if not st.session_state.api_key:
-        st.warning("❄️ If you want to try this app with more than `100` tokens, you must provide your own DeepInfra API key. Get yours here → https://deepinfra.com/dash/api_keys")
 
-if max_tokens <= 100 or st.session_state.api_key:
     if "messages" not in st.session_state:
         st.session_state.messages = [{"role": "assistant", "content": "How may I assist you today?"}]
         
@@ -91,18 +82,18 @@ if max_tokens <= 100 or st.session_state.api_key:
         with st.chat_message(message["role"]):
             st.write(message["content"])
     
-    if prompt := st.chat_input():
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("assistant"):
-            with st.spinner("Thinking..."):
-                response, error = get_response(model_display_name, prompt, max_tokens, top_p)
-                if error:
-                    st.error(f"Error: {error}") 
-                else:
-                    placeholder = st.empty()
-                    placeholder.markdown(response)
-                    message = {"role": "assistant", "content": response}
-                    st.session_state.messages.append(message)
+if prompt := st.chat_input():
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    with st.chat_message("assistant"):
+        with st.spinner("Thinking..."):
+            response, error = get_response(model_display_name, prompt, max_tokens, top_p, temperature)
+            if error:
+                st.error(f"Error: {error}") 
+            else:
+                placeholder = st.empty()
+                placeholder.markdown(response)
+                message = {"role": "assistant", "content": response}
+                st.session_state.messages.append(message)
 
 # Clear chat history function and button
 def clear_chat_history():
